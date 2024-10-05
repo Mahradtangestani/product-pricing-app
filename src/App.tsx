@@ -1,24 +1,24 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
 
-function App() {
+import './App.css';
+import { useQuery } from 'react-query';
+
+
+const fetchProducts = async ()=>{
+   const res = await fetch("https://dummyjson.com/c/1c70-7ac1-4234-b47d")
+   return res.json()
+}
+
+const App:React.FC = ()=> {
+   
+  const {data , error , isLoading} = useQuery("products" , fetchProducts) 
+  if(isLoading) return <div>Loading...</div>
+  if(error) return <div>Error fetching data</div>
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>Product Pricing</h1>
+      <pre>{JSON.stringify(data, null, 2)}</pre>
     </div>
   );
 }
