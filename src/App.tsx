@@ -16,7 +16,7 @@ const App: React.FC = () => {
   const [submitStatus, setSubmitStatus] = useState<string | null>(null); // وضعیت ارسال فرم
   const [isSubmitting, setIsSubmitting] = useState(false); // وضعیت ارسال درخواست (برای اسپینر)
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div className='flex justify-center items-center m-auto h-screen text-xl font-medium'>Loading...</div>;
   if (error) return <div>Error fetching data</div>;
 
    
