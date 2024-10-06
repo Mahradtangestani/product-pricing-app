@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery } from 'react-query';
-import { ImSpinner2 } from "react-icons/im";
+import * as XLSX from 'xlsx'; // وارد کردن کتابخانه xlsx
+
+
 
 const fetchProducts = async () => {
   const res = await fetch('https://dummyjson.com/c/1c70-7ac1-4234-b47d');
@@ -17,16 +19,21 @@ const App: React.FC = () => {
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error fetching data</div>;
 
-  if (!data || !data.providersPriceDetails) return <div>No data available</div>;
+   
+  const selectedProducts = data.providersPriceDetails.filter((item: any) =>
+    selectedItems.includes(item.id)
+  );
+
 
   // محاسبه مجموع قیمت با اعمال تخفیف
-  const totalPrice = data.providersPriceDetails
-    .filter((item: any) => selectedItems.includes(item.id))
-    .reduce((sum: number, item: any) => {
-      const discount = discounts[item.id] || 0;
-      const priceAfterDiscount = item.unit * item.quantity * ((100 - discount) / 100);
-      return sum + priceAfterDiscount;
-    }, 0);
+  const totalPrice = selectedProducts.reduce((sum: number, item: any) => {
+    const discount = discounts[item.id] || 0;
+    const priceAfterDiscount = item.unit * item.quantity * ((100 - discount) / 100);
+    return sum + priceAfterDiscount;
+  }, 0);
+
+
+
 
   // مدیریت انتخاب چک‌باکس‌ها
   const handleCheckboxChange = (id: number) => {
@@ -78,6 +85,26 @@ const App: React.FC = () => {
     }
   };
 
+
+   
+  // تابع دانلود اکسل
+  const handleDownloadExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(
+      selectedProducts.map((item: any) => ({
+        Title: item.title,
+        'Part Number': item.partNumber,
+        Unit: item.unit,
+        Quantity: item.quantity,
+        Discount: discounts[item.id] || 0,
+      }))
+    );
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Products');
+    XLSX.writeFile(workbook, 'selected_products.xlsx');
+  };
+
+
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-center text-2xl font-bold mb-4">Product Pricing with Discount</h1>
@@ -89,7 +116,7 @@ const App: React.FC = () => {
 
       {/* جدول محصولات */}
       <table className="min-w-full bg-white">
-        <thead>
+        <thead className='bg-slate-200'>
           <tr>
             <th className="py-2">Title</th>
             <th className="py-2">Part Number</th>
@@ -133,7 +160,7 @@ const App: React.FC = () => {
       <div className="text-right mt-4">
         <button
           onClick={handleSubmit}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          className="bg-blue-500 text-white px-4 py-2 rounded mx-2"
           disabled={isSubmitting} // دکمه در حین ارسال غیر فعال می‌شود
         >
           {isSubmitting ? (
@@ -143,11 +170,19 @@ const App: React.FC = () => {
             'Submit'
           )}
         </button>
+
+        {/* دکمه دانلود اکسل */}
+        <button
+          onClick={handleDownloadExcel}
+          className="bg-green-500 text-white px-4 py-2 rounded"
+        >
+          Download Excel
+        </button>
       </div>
 
 
       {/* نمایش وضعیت ارسال */}
-      {submitStatus && <div className="mt-4 text-center">{submitStatus}</div>}
+      {submitStatus && <div className="mt-4 text-center text-green-600 font-bold">{submitStatus}</div>}
     </div>
   );
 };
